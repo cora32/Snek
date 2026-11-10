@@ -1,9 +1,5 @@
 package io.iskopasi.snek.model
 
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.center
-import kotlin.getValue
-
 
 data class Point(val x: Int, val y: Int)
 
@@ -22,16 +18,17 @@ class SnekData(val size: Int) {
         body.add(Point(center - 1, center))
     }
 
-    private fun moveOrGrow(newX: Int, newY: Int, foodMap: MutableMap<Point, Point>): Boolean {
-        val isScore = isFood(newX, newY, foodMap)
+    private fun moveOrGrow(newX: Int, newY: Int, foodSet: MutableSet<Point>): Boolean {
+        val isFood = isFood(newX, newY, foodSet)
 
-        if (isScore) {
+        if (isFood) {
             addSegment(newX, newY)
+            eatFood(newX, newY, foodSet)
         } else {
             move(newX, newY)
         }
 
-        return isScore
+        return isFood
     }
 
     fun move(x: Int, y: Int) {
@@ -46,48 +43,60 @@ class SnekData(val size: Int) {
         }
 
         body.addFirst(point)
+
+        println("move: $point")
+
+        for (segment in body) {
+            println(segment)
+        }
     }
 
-    fun moveRight(foodMap: MutableMap<Point, Point>): Boolean {
+    fun moveRight(foodSet: MutableSet<Point>): Boolean {
         val head = body.first()
 
         val newX = head.x + 1
         val newY = head.y
 
-        val isScore = moveOrGrow(newX, newY, foodMap)
+        val isFood = moveOrGrow(newX, newY, foodSet)
 
-        return isScore
+        return isFood
     }
 
-    fun moveLeft(foodMap: MutableMap<Point, Point>): Boolean {
+    private fun eatFood(x: Int, y: Int, foodSet: MutableSet<Point>) {
+        println("food1: ${foodSet.size}")
+        foodSet.remove(Point(x, y))
+        println("food2: ${foodSet.size}")
+    }
+
+    fun moveLeft(foodSet: MutableSet<Point>): Boolean {
         val head = body.first()
 
         val newX = head.x - 1
         val newY = head.y
 
-        return moveOrGrow(newX, newY, foodMap)
+        return moveOrGrow(newX, newY, foodSet)
     }
 
-    fun moveUp(foodMap: MutableMap<Point, Point>): Boolean {
+    fun moveUp(foodSet: MutableSet<Point>): Boolean {
         val head = body.first()
 
         val newX = head.x
         val newY = head.y - 1
 
-        return moveOrGrow(newX, newY, foodMap)
+        return moveOrGrow(newX, newY, foodSet)
     }
 
-    fun moveDown(foodMap: MutableMap<Point, Point>): Boolean {
+    fun moveDown(foodSet: MutableSet<Point>): Boolean {
         val head = body.first()
 
         val newX = head.x
         val newY = head.y + 1
 
-        return moveOrGrow(newX, newY, foodMap)
+        return moveOrGrow(newX, newY, foodSet)
     }
 
-    private fun isFood(newX: Int, newY: Int, foodMap: MutableMap<Point, Point>): Boolean {
-        return foodMap.containsKey(Point(newX, newY))
+    private fun isFood(newX: Int, newY: Int, foodSet: MutableSet<Point>): Boolean {
+        return foodSet.contains(Point(newX, newY))
     }
 
     private fun addSegment(newX: Int, newY: Int) {
@@ -96,7 +105,7 @@ class SnekData(val size: Int) {
 }
 
 class GameObject(val size: Int) {
-    val foodMap: MutableMap<Point, Point> by lazy { getFoodData(size = size) }
+    val foodSet: MutableSet<Point> by lazy { getFoodData(size = size) }
     val snekData: SnekData by lazy { getSnekData(size = size) }
     var score: Int = 0
 
@@ -106,19 +115,19 @@ class GameObject(val size: Int) {
         return snekData
     }
 
-    private fun getFoodData(size: Int): MutableMap<Point, Point> {
-        val foodMap = mutableMapOf<Point, Point>()
+    private fun getFoodData(size: Int): MutableSet<Point> {
+        val foodSet = mutableSetOf<Point>()
 
         repeat(20) {
             val point = Point((0..<size).random(), (0..<size).random())
-            foodMap[point] = point
+            foodSet.add(point)
         }
 
-        return foodMap
+        return foodSet
     }
 
     fun moveRight() {
-        val isScore = snekData.moveRight(foodMap = foodMap)
+        val isScore = snekData.moveRight(foodSet = foodSet)
 
         if (isScore) {
             score++
@@ -126,7 +135,7 @@ class GameObject(val size: Int) {
     }
 
     fun moveLeft() {
-        val isScore = snekData.moveLeft(foodMap = foodMap)
+        val isScore = snekData.moveLeft(foodSet = foodSet)
 
         if (isScore) {
             score++
@@ -134,7 +143,7 @@ class GameObject(val size: Int) {
     }
 
     fun moveUp() {
-        val isScore = snekData.moveUp(foodMap = foodMap)
+        val isScore = snekData.moveUp(foodSet = foodSet)
 
         if (isScore) {
             score++
@@ -142,7 +151,7 @@ class GameObject(val size: Int) {
     }
 
     fun moveDown() {
-        val isScore = snekData.moveDown(foodMap = foodMap)
+        val isScore = snekData.moveDown(foodSet = foodSet)
 
         if (isScore) {
             score++

@@ -9,20 +9,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+const val initialMapSize = 30
+
 data class UIState(
     val score: Int,
-    val snekBody: ArrayDeque<Point>,
+    val snekBody: List<Point>,
     val foodPoints: Set<Point>,
-    val mapSize: Int = 10,
+    val mapSize: Int = initialMapSize,
 )
 
-class SnekViewModel(val mapSize: Int = 10) : ViewModel() {
-    private val gameObject = GameObject(size = mapSize)
+class SnekViewModel(val mapSize: Int = initialMapSize) : ViewModel() {
+    private var gameObject = GameObject(size = mapSize)
     private val _state = MutableStateFlow(
         UIState(
             score = 0,
-            snekBody = gameObject.snekData.body,
-            foodPoints = gameObject.foodMap.keys,
+            snekBody = gameObject.snekData.body.toList(),
+            foodPoints = gameObject.foodSet.toSet(),
             mapSize = mapSize
         )
     )
@@ -60,12 +62,20 @@ class SnekViewModel(val mapSize: Int = 10) : ViewModel() {
         }
     }
 
+    fun onRestart() {
+        viewModelScope.launch {
+            gameObject = GameObject(size = mapSize)
+
+            update()
+        }
+    }
+
     private fun update() {
         _state.update {
             it.copy(
                 score = gameObject.score,
-                snekBody = gameObject.snekData.body,
-                foodPoints = gameObject.foodMap.keys
+                snekBody = gameObject.snekData.body.toList(),
+                foodPoints = gameObject.foodSet.toSet()
             )
         }
     }
