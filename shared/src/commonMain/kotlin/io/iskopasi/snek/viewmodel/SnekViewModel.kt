@@ -8,6 +8,7 @@ import io.iskopasi.snek.model.Segment
 import io.iskopasi.snek.model.SnekResourceLoader
 import io.iskopasi.snek.model.StepAnimator
 import io.iskopasi.snek.model.StepState
+import io.iskopasi.snek.model.TileSettings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -22,6 +23,7 @@ data class UIState(
     val mapSize: Int = initialMapSize,
     val stepState: StepState,
     val imageNameMap: Map<Int, String>,
+    val tileSettings: TileSettings
 )
 
 
@@ -39,7 +41,8 @@ class SnekViewModel(val mapSize: Int = initialMapSize) : ViewModel() {
             imageNameMap = resourceLoader.calculateImageNameMap(
                 gameObject.snekData.body.toList(),
                 StepState.Idle
-            )
+            ),
+            tileSettings = gameObject.tileSettings
         )
     )
     private val stepAnimator = StepAnimator()
@@ -105,7 +108,8 @@ class SnekViewModel(val mapSize: Int = initialMapSize) : ViewModel() {
                 snekBody = gameObject.snekData.body.toList(),
                 foodPoints = gameObject.foodSet.toSet(),
                 stepState = currentStepState,
-                imageNameMap = imageNameMap
+                imageNameMap = imageNameMap,
+                tileSettings = gameObject.tileSettings
             )
         }
     }

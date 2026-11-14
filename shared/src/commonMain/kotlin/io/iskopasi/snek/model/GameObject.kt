@@ -1,19 +1,8 @@
 package io.iskopasi.snek.model
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import kotlin.time.TimeSource
-
 val charMap = mapOf(
     0 to "cirno_sprite",
-    1 to "cirno_sprite",
+    1 to "daiyousei",
     2 to "cirno_sprite",
 )
 
@@ -28,6 +17,14 @@ enum class StepState {
     Left,
     Right,
     Idle
+}
+
+enum class ResName {
+    Grass1,
+    Grass2,
+    Grass3,
+    GrassWhiteFlower,
+    GrassYellowFlower,
 }
 
 data class Point(val x: Int, val y: Int)
@@ -51,66 +48,6 @@ data class Segment(
                 else -> Direction.Right
             }
         }
-    }
-}
-
-class StepAnimator {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private var _stepState = MutableStateFlow<StepState>(StepState.Idle)
-    val stepState = _stepState.asStateFlow()
-
-    var delayedTask: Job? = null
-
-    private val timeSource = TimeSource.Monotonic
-    private var lastStepTime = timeSource.markNow()
-
-    suspend fun updateStepState() {
-        val elapsedMs = lastStepTime.elapsedNow().inWholeMilliseconds
-        if (elapsedMs > 200) { // Switch legs every 200ms
-            switchLegs()
-            lastStepTime = timeSource.markNow()
-        }
-
-        // Set to Idle after 0.5 second
-        delayedTask?.cancel()
-        delayedTask = scope.launch {
-            delay(500L)
-            _stepState.update {
-                StepState.Idle
-            }
-        }
-    }
-
-    private fun switchLegs() {
-        _stepState.update {
-            when (it) {
-                StepState.Idle -> StepState.Right
-                StepState.Right -> StepState.Left
-                StepState.Left -> StepState.Right
-            }
-        }
-
-    }
-}
-
-class SnekResourceLoader {
-    fun calculateImageNameMap(
-        segments: List<Segment>,
-        stepState: StepState,
-    ): Map<Int, String> {
-        val result = mutableMapOf<Int, String>()
-
-        for (i in segments.indices) {
-            val segment = segments[i]
-
-            val characterName = charMap[i]
-            val direction = segment.getDirection()
-
-            result[i] =
-                "${characterName}_${direction.name.lowercase()}_${stepState.name.lowercase()}"
-        }
-
-        return result
     }
 }
 
@@ -233,6 +170,7 @@ class SnekData(val size: Int) {
 }
 
 class GameObject(val size: Int) {
+    val tileSettings = TileSettings(mapSize = size)
     val foodSet: MutableSet<Point> by lazy { getFoodData(size = size) }
     val snekData: SnekData by lazy { getSnekData(size = size) }
     var score: Int = 0
