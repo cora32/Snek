@@ -299,8 +299,8 @@ fun ContentDrawScope.drawNet(
             tileIndex++
 
             val grassImage = when {
-                tileSettings.yellowFlowerNumbers.contains(tileIndex) -> generalBitmapMap[ResName.GrassYellowFlower]
-                tileSettings.whiteFlowerNumbers.contains(tileIndex) -> generalBitmapMap[ResName.GrassWhiteFlower]
+                tileSettings.yellowFlowerIndices.contains(tileIndex) -> generalBitmapMap[ResName.GrassYellowFlower]
+                tileSettings.whiteFlowerIndices.contains(tileIndex) -> generalBitmapMap[ResName.GrassWhiteFlower]
                 (tileIndex) % tileSettings.grassTile1Index == 0 -> generalBitmapMap[ResName.Grass1]
                 (tileIndex) % tileSettings.grassTile2Index == 0 -> generalBitmapMap[ResName.Grass2]
                 else -> generalBitmapMap[ResName.Grass3]

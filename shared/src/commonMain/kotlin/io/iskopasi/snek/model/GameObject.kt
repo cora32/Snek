@@ -171,7 +171,6 @@ class SnekData(val size: Int) {
 
 class GameObject(val size: Int) {
     val tileSettings = TileSettings(mapSize = size)
-    val foodSet: MutableSet<Point> by lazy { getFoodData(size = size) }
     val snekData: SnekData by lazy { getSnekData(size = size) }
     var score: Int = 0
 
@@ -181,19 +180,8 @@ class GameObject(val size: Int) {
         return snekData
     }
 
-    private fun getFoodData(size: Int): MutableSet<Point> {
-        val foodSet = mutableSetOf<Point>()
-
-        repeat(20) {
-            val point = Point((0..<size).random(), (0..<size).random())
-            foodSet.add(point)
-        }
-
-        return foodSet
-    }
-
     fun moveRight() {
-        val isScore = snekData.moveRight(foodSet = foodSet)
+        val isScore = snekData.moveRight(foodSet = tileSettings.apuPoints)
 
         if (isScore) {
             score++
@@ -201,7 +189,7 @@ class GameObject(val size: Int) {
     }
 
     fun moveLeft() {
-        val isScore = snekData.moveLeft(foodSet = foodSet)
+        val isScore = snekData.moveLeft(foodSet = tileSettings.apuPoints)
 
         if (isScore) {
             score++
@@ -209,7 +197,7 @@ class GameObject(val size: Int) {
     }
 
     fun moveUp() {
-        val isScore = snekData.moveUp(foodSet = foodSet)
+        val isScore = snekData.moveUp(foodSet = tileSettings.apuPoints)
 
         if (isScore) {
             score++
@@ -217,7 +205,7 @@ class GameObject(val size: Int) {
     }
 
     fun moveDown() {
-        val isScore = snekData.moveDown(foodSet = foodSet)
+        val isScore = snekData.moveDown(foodSet = tileSettings.apuPoints)
 
         if (isScore) {
             score++

@@ -35,7 +35,7 @@ class SnekViewModel(val mapSize: Int = initialMapSize) : ViewModel() {
         UIState(
             score = 0,
             snekBody = gameObject.snekData.body.toList(),
-            foodPoints = gameObject.foodSet.toSet(),
+            foodPoints = gameObject.tileSettings.apuPoints.toSet(),
             mapSize = mapSize,
             stepState = StepState.Idle,
             imageNameMap = resourceLoader.calculateImageNameMap(
@@ -106,7 +106,7 @@ class SnekViewModel(val mapSize: Int = initialMapSize) : ViewModel() {
             it.copy(
                 score = gameObject.score,
                 snekBody = gameObject.snekData.body.toList(),
-                foodPoints = gameObject.foodSet.toSet(),
+                foodPoints = gameObject.tileSettings.apuPoints.toSet(),
                 stepState = currentStepState,
                 imageNameMap = imageNameMap,
                 tileSettings = gameObject.tileSettings
