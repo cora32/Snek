@@ -1,10 +1,121 @@
 package io.iskopasi.snek.model
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlin.time.TimeSource
+
+val charMap = mapOf(
+    0 to "cirno_sprite",
+    1 to "cirno_sprite",
+    2 to "cirno_sprite",
+)
+
+enum class Direction {
+    Up,
+    Down,
+    Left,
+    Right
+}
+
+enum class StepState {
+    Left,
+    Right,
+    Idle
+}
 
 data class Point(val x: Int, val y: Int)
 
+data class Segment(
+    val point: Point,
+    var prevPoint: Point? = null
+) {
+    fun getDirection(): Direction {
+        if (prevPoint == null) {
+            return Direction.Right
+        } else {
+            val dx = point.x - prevPoint!!.x
+            val dy = point.y - prevPoint!!.y
+
+            return when {
+                dx > 0 -> Direction.Right
+                dx < 0 -> Direction.Left
+                dy > 0 -> Direction.Down
+                dy < 0 -> Direction.Up
+                else -> Direction.Right
+            }
+        }
+    }
+}
+
+class StepAnimator {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var _stepState = MutableStateFlow<StepState>(StepState.Idle)
+    val stepState = _stepState.asStateFlow()
+
+    var delayedTask: Job? = null
+
+    private val timeSource = TimeSource.Monotonic
+    private var lastStepTime = timeSource.markNow()
+
+    suspend fun updateStepState() {
+        val elapsedMs = lastStepTime.elapsedNow().inWholeMilliseconds
+        if (elapsedMs > 200) { // Switch legs every 200ms
+            switchLegs()
+            lastStepTime = timeSource.markNow()
+        }
+
+        // Set to Idle after 0.5 second
+        delayedTask?.cancel()
+        delayedTask = scope.launch {
+            delay(500L)
+            _stepState.update {
+                StepState.Idle
+            }
+        }
+    }
+
+    private fun switchLegs() {
+        _stepState.update {
+            when (it) {
+                StepState.Idle -> StepState.Right
+                StepState.Right -> StepState.Left
+                StepState.Left -> StepState.Right
+            }
+        }
+
+    }
+}
+
+class SnekResourceLoader {
+    fun calculateImageNameMap(
+        segments: List<Segment>,
+        stepState: StepState,
+    ): Map<Int, String> {
+        val result = mutableMapOf<Int, String>()
+
+        for (i in segments.indices) {
+            val segment = segments[i]
+
+            val characterName = charMap[i]
+            val direction = segment.getDirection()
+
+            result[i] =
+                "${characterName}_${direction.name.lowercase()}_${stepState.name.lowercase()}"
+        }
+
+        return result
+    }
+}
+
 class SnekData(val size: Int) {
-    val body: ArrayDeque<Point> = ArrayDeque<Point>()
+    val body: ArrayDeque<Segment> = ArrayDeque<Segment>()
 
     init {
         initBody(size = size)
@@ -13,9 +124,22 @@ class SnekData(val size: Int) {
     fun initBody(size: Int) {
         val center = (size / 2f).toInt()
 
-        body.add(Point(center + 1, center))
-        body.add(Point(center, center))
-        body.add(Point(center - 1, center))
+        val segment1 = Segment(
+            point = Point(center + 1, center),
+            prevPoint = Point(center, center)
+        )
+        val segment2 = Segment(
+            point = Point(center, center),
+            prevPoint = Point(center - 1, center)
+        )
+        val segment3 = Segment(
+            point = Point(center - 1, center),
+            prevPoint = null
+        )
+
+        body.add(segment1)
+        body.add(segment2)
+        body.add(segment3)
     }
 
     private fun moveOrGrow(newX: Int, newY: Int, foodSet: MutableSet<Point>): Boolean {
@@ -42,7 +166,7 @@ class SnekData(val size: Int) {
             else -> Point(x, y)
         }
 
-        body.addFirst(point)
+        addSegment(newX = point.x, newY = point.y)
 
         println("move: $point")
 
@@ -52,7 +176,7 @@ class SnekData(val size: Int) {
     }
 
     fun moveRight(foodSet: MutableSet<Point>): Boolean {
-        val head = body.first()
+        val head = body.first().point
 
         val newX = head.x + 1
         val newY = head.y
@@ -63,13 +187,13 @@ class SnekData(val size: Int) {
     }
 
     private fun eatFood(x: Int, y: Int, foodSet: MutableSet<Point>) {
-        println("food1: ${foodSet.size}")
+        println("foodSet1: ${foodSet.size}")
         foodSet.remove(Point(x, y))
-        println("food2: ${foodSet.size}")
+        println("foodSet2: ${foodSet.size}")
     }
 
     fun moveLeft(foodSet: MutableSet<Point>): Boolean {
-        val head = body.first()
+        val head = body.first().point
 
         val newX = head.x - 1
         val newY = head.y
@@ -78,7 +202,7 @@ class SnekData(val size: Int) {
     }
 
     fun moveUp(foodSet: MutableSet<Point>): Boolean {
-        val head = body.first()
+        val head = body.first().point
 
         val newX = head.x
         val newY = head.y - 1
@@ -87,7 +211,7 @@ class SnekData(val size: Int) {
     }
 
     fun moveDown(foodSet: MutableSet<Point>): Boolean {
-        val head = body.first()
+        val head = body.first().point
 
         val newX = head.x
         val newY = head.y + 1
@@ -100,7 +224,11 @@ class SnekData(val size: Int) {
     }
 
     private fun addSegment(newX: Int, newY: Int) {
-        body.addFirst(Point(newX, newY))
+        val segment = Segment(
+            point = Point(newX, newY),
+            prevPoint = body.first().point
+        )
+        body.addFirst(segment)
     }
 }
 
