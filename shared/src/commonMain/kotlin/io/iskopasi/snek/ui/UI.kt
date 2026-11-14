@@ -34,6 +34,8 @@ import io.iskopasi.snek.model.Point
 import io.iskopasi.snek.model.ResName
 import io.iskopasi.snek.model.Segment
 import io.iskopasi.snek.model.TileSettings
+import io.iskopasi.snek.model.TreeType
+import io.iskopasi.snek.utils.WALL
 import io.iskopasi.snek.utils.loadBitmapByName
 import org.jetbrains.compose.resources.imageResource
 import snek.shared.generated.resources.Res
@@ -42,6 +44,9 @@ import snek.shared.generated.resources.grass_02
 import snek.shared.generated.resources.grass_03
 import snek.shared.generated.resources.grass_white_flower
 import snek.shared.generated.resources.grass_yellow_flower
+import snek.shared.generated.resources.tree_01_green
+import snek.shared.generated.resources.tree_02_sakura
+import snek.shared.generated.resources.tree_03_snow_pine
 import kotlin.math.min
 
 
@@ -139,6 +144,9 @@ fun rememberGeneralBitmapMap(modifier: Modifier = Modifier): Map<ResName, ImageB
     val g3 = imageResource(Res.drawable.grass_03)
     val gwf = imageResource(Res.drawable.grass_white_flower)
     val gyf = imageResource(Res.drawable.grass_yellow_flower)
+    val tree1 = imageResource(Res.drawable.tree_01_green)
+    val tree2 = imageResource(Res.drawable.tree_02_sakura)
+    val tree3 = imageResource(Res.drawable.tree_03_snow_pine)
 
     val state = produceState(
         initialValue = emptyMap(),
@@ -151,6 +159,9 @@ fun rememberGeneralBitmapMap(modifier: Modifier = Modifier): Map<ResName, ImageB
         map[ResName.Grass3] = g3
         map[ResName.GrassWhiteFlower] = gwf
         map[ResName.GrassYellowFlower] = gyf
+        map[ResName.Tree1] = tree1
+        map[ResName.Tree2] = tree2
+        map[ResName.Tree3] = tree3
 
         value = map
     }
@@ -287,6 +298,12 @@ fun ContentDrawScope.drawNet(
     step: Float
 ) {
     var tileIndex = 0
+    val treeRes = when (tileSettings.treeType) {
+        TreeType.Tree1 -> ResName.Tree1
+        TreeType.Tree2 -> ResName.Tree2
+        TreeType.Tree3 -> ResName.Tree3
+    }
+
     for (row in 0 until mapSize) {
         val top = (row * step).toInt()
         val bottom = ((row + 1) * step).toInt()
@@ -301,11 +318,14 @@ fun ContentDrawScope.drawNet(
             val grassImage = when {
                 tileSettings.yellowFlowerIndices.contains(tileIndex) -> generalBitmapMap[ResName.GrassYellowFlower]
                 tileSettings.whiteFlowerIndices.contains(tileIndex) -> generalBitmapMap[ResName.GrassWhiteFlower]
-                (tileIndex) % tileSettings.grassTile1Index == 0 -> generalBitmapMap[ResName.Grass1]
-                (tileIndex) % tileSettings.grassTile2Index == 0 -> generalBitmapMap[ResName.Grass2]
-                else -> generalBitmapMap[ResName.Grass3]
+                else -> when {
+                    (tileIndex) % tileSettings.grassTile1Index == 0 -> generalBitmapMap[ResName.Grass1]
+                    (tileIndex) % tileSettings.grassTile2Index == 0 -> generalBitmapMap[ResName.Grass2]
+                    else -> generalBitmapMap[ResName.Grass3]
+                }
             }
 
+            // Floor
             grassImage?.let {
                 drawImage(
                     image = it,
@@ -313,6 +333,20 @@ fun ContentDrawScope.drawNet(
                     dstSize = IntSize(tileWidth, tileHeight)
                 )
             }
+
+            // Wall
+            if (tileSettings.treeMaze[col][row] == WALL) {
+                val wallResource = generalBitmapMap[treeRes]
+
+                wallResource?.let {
+                    drawImage(
+                        image = it,
+                        dstOffset = IntOffset(left, top),
+                        dstSize = IntSize(tileWidth, tileHeight)
+                    )
+                }
+            }
+
         }
     }
 

@@ -25,6 +25,9 @@ enum class ResName {
     Grass3,
     GrassWhiteFlower,
     GrassYellowFlower,
+    Tree1,
+    Tree2,
+    Tree3,
 }
 
 data class Point(val x: Int, val y: Int)

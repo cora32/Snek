@@ -1,22 +1,26 @@
 package io.iskopasi.snek.model
 
 import io.iskopasi.snek.platform.moreRandom
+import io.iskopasi.snek.utils.generateLabyrinth
 
+enum class TreeType {
+    Tree1,
+    Tree2,
+    Tree3
+}
 
 class TileSettings(
     val mapSize: Int,
 ) {
-    var yellowFlowerIndices: Set<Int> = emptySet()
-    var whiteFlowerIndices: Set<Int> = emptySet()
-    var apuPoints: MutableSet<Point> = mutableSetOf()
-    var grassTile1Index: Int = 1
-    var grassTile2Index: Int = 1
+    val yellowFlowerIndices: Set<Int> by lazy { getYellowFlowerNumbers() }
+    val whiteFlowerIndices: Set<Int> by lazy { getWhiteFlowerNumbers() }
+    val apuPoints: MutableSet<Point> by lazy { getApu() }
+    val grassTile1Index: Int = (2..mapSize).moreRandom()
+    val grassTile2Index: Int = (5..mapSize).moreRandom()
+    val treeMaze: Array<IntArray> by lazy { generateLabyrinth(mapSize) }
+    val treeType: TreeType = TreeType.entries.toTypedArray().random()
 
-    init {
-        init()
-    }
-
-    fun initYellowFlowerNumbers() {
+    fun getYellowFlowerNumbers(): Set<Int> {
         val set = mutableSetOf<Int>()
         val count = (0..((mapSize * mapSize) / 6)).moreRandom()
         val range = 0..<mapSize * mapSize
@@ -25,10 +29,10 @@ class TileSettings(
             set.add(range.moreRandom())
         }
 
-        yellowFlowerIndices = set.toSet()
+        return set.toSet()
     }
 
-    fun initWhiteFlowerNumbers() {
+    fun getWhiteFlowerNumbers(): Set<Int> {
         val set = mutableSetOf<Int>()
         val count = (0..((mapSize * mapSize) / 8)).moreRandom()
         val range = 0..<mapSize * mapSize
@@ -37,10 +41,10 @@ class TileSettings(
             set.add(range.moreRandom())
         }
 
-        whiteFlowerIndices = set.toSet()
+        return set.toSet()
     }
 
-    fun initApu() {
+    fun getApu(): MutableSet<Point> {
         val set = mutableSetOf<Point>()
         val count = (0..((mapSize * mapSize) / 15)).moreRandom()
 
@@ -49,15 +53,6 @@ class TileSettings(
             set.add(point)
         }
 
-        apuPoints = set
-    }
-
-    fun init() {
-        initYellowFlowerNumbers()
-        initWhiteFlowerNumbers()
-        initApu()
-
-        grassTile1Index = (2..mapSize).moreRandom()
-        grassTile2Index = (5..mapSize).moreRandom()
+        return set
     }
 }
