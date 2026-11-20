@@ -6,6 +6,13 @@ val charMap = mapOf(
     2 to "cirno_sprite",
 )
 
+val charTypeMap = mapOf(
+    0 to TileType.Cirno,
+    1 to TileType.Daiyousei,
+    2 to TileType.Cirno,
+)
+
+
 enum class Direction {
     Up,
     Down,
@@ -170,11 +177,20 @@ class SnekData(val size: Int) {
         )
         body.addFirst(segment)
     }
+
+    fun getCharacter(x: Int, y: Int): TileType {
+        body.forEachIndexed { index, segment ->
+            if (segment.point.x == x && segment.point.y == y)
+                return charTypeMap[index] ?: TileType.None
+        }
+
+        return TileType.None
+    }
 }
 
 class GameObject(val size: Int) {
-    val tileSettings = TileSettings(mapSize = size)
     val snekData: SnekData by lazy { getSnekData(size = size) }
+    val tileSettings = TileSettings(mapSize = size, snekData = snekData)
     var score: Int = 0
 
     private fun getSnekData(size: Int): SnekData {
@@ -213,5 +229,29 @@ class GameObject(val size: Int) {
         if (isScore) {
             score++
         }
+    }
+
+    fun toMatrix(): Array<Array<List<TileType>>> {
+        val matrix = Array(size) {
+            Array(size) {
+                emptyList<TileType>()
+            }
+        }
+
+        for (x in 0..<size) {
+            for (y in 0..<size) {
+                val vector = mutableListOf<TileType>()
+
+                val grassType = tileSettings.getGrassAt(x, y)
+                val topItem = tileSettings.getTopItem(x, y)
+
+                vector.add(grassType) // Add grass tile first
+                vector.add(topItem)
+
+                matrix[x][y] = vector
+            }
+        }
+
+        return matrix
     }
 }

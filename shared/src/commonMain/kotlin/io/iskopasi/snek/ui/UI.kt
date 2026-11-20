@@ -34,11 +34,13 @@ import io.iskopasi.snek.model.Point
 import io.iskopasi.snek.model.ResName
 import io.iskopasi.snek.model.Segment
 import io.iskopasi.snek.model.TileSettings
+import io.iskopasi.snek.model.TileType
 import io.iskopasi.snek.model.TreeType
 import io.iskopasi.snek.utils.WALL
 import io.iskopasi.snek.utils.loadBitmapByName
 import org.jetbrains.compose.resources.imageResource
 import snek.shared.generated.resources.Res
+import snek.shared.generated.resources.apu
 import snek.shared.generated.resources.grass_01
 import snek.shared.generated.resources.grass_02
 import snek.shared.generated.resources.grass_03
@@ -170,6 +172,40 @@ fun rememberGeneralBitmapMap(modifier: Modifier = Modifier): Map<ResName, ImageB
 }
 
 @Composable
+fun loadResMap(modifier: Modifier = Modifier): Map<TileType, ImageBitmap> {
+    val g1 = imageResource(Res.drawable.grass_01)
+    val g2 = imageResource(Res.drawable.grass_02)
+    val g3 = imageResource(Res.drawable.grass_03)
+    val gwf = imageResource(Res.drawable.grass_white_flower)
+    val gyf = imageResource(Res.drawable.grass_yellow_flower)
+    val tree1 = imageResource(Res.drawable.tree_01_green)
+    val tree2 = imageResource(Res.drawable.tree_02_sakura)
+    val tree3 = imageResource(Res.drawable.tree_03_snow_pine)
+    val apu = imageResource(Res.drawable.apu)
+
+    val state = produceState(
+        initialValue = emptyMap(),
+        keys = arrayOf(Unit)
+    ) {
+        val map = mutableMapOf<TileType, ImageBitmap>()
+
+        map[TileType.Grass1] = g1
+        map[TileType.Grass2] = g2
+        map[TileType.Grass3] = g3
+        map[TileType.GrassYellowFlower] = gyf
+        map[TileType.GrassWhiteFlower] = gwf
+        map[TileType.Tree1] = tree1
+        map[TileType.Tree2] = tree2
+        map[TileType.Tree3] = tree3
+        map[TileType.Apu] = apu
+
+        value = map
+    }
+
+    return state.value
+}
+
+@Composable
 fun Modifier.drawUI(
     snekBody: List<Segment>,
     foodPoints: Set<Point>,
@@ -290,7 +326,7 @@ fun ContentDrawScope.drawFood(
     }
 }
 
-fun ContentDrawScope.drawNet(
+private fun ContentDrawScope.drawNet(
     brush: SolidColor,
     generalBitmapMap: Map<ResName, ImageBitmap>,
     tileSettings: TileSettings,
