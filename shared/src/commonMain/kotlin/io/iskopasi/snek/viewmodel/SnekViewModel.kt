@@ -25,13 +25,14 @@ data class UIState(
     val stepState: StepState,
     val imageNameMap: Map<Int, String>,
     val tileSettings: TileSettings,
-    val matrix: Array<Array<List<TileType>>>
+    val matrix: Array<Array<List<TileType>>>,
+    val characterResNames: Map<TileType, String>,
 )
 
 
 class SnekViewModel(val mapSize: Int = initialMapSize) : ViewModel() {
-    private var gameObject = GameObject(size = mapSize)
     private val resourceLoader = SnekResourceLoader()
+    var gameObject = GameObject(size = mapSize)
 
     private val _state = MutableStateFlow(
         UIState(
@@ -45,7 +46,8 @@ class SnekViewModel(val mapSize: Int = initialMapSize) : ViewModel() {
                 StepState.Idle
             ),
             tileSettings = gameObject.tileSettings,
-            matrix = gameObject.toMatrix()
+            matrix = gameObject.toMatrix(),
+            characterResNames = mapOf()
         )
     )
     private val stepAnimator = StepAnimator()
@@ -105,6 +107,7 @@ class SnekViewModel(val mapSize: Int = initialMapSize) : ViewModel() {
             currentStepState
         )
         val matrix = gameObject.toMatrix()
+        val characterResNames = gameObject.getCharacterResNames(stepState = currentStepState)
 
         _state.update {
             it.copy(
@@ -114,7 +117,8 @@ class SnekViewModel(val mapSize: Int = initialMapSize) : ViewModel() {
                 stepState = currentStepState,
                 imageNameMap = imageNameMap,
                 tileSettings = gameObject.tileSettings,
-                matrix = matrix
+                matrix = matrix,
+                characterResNames = characterResNames
             )
         }
     }

@@ -12,6 +12,12 @@ val charTypeMap = mapOf(
     2 to TileType.Cirno,
 )
 
+val charIndexMap = mapOf(
+    TileType.Cirno to 0,
+    TileType.Daiyousei to 1,
+    TileType.Cirno to 2,
+)
+
 
 enum class Direction {
     Up,
@@ -180,11 +186,38 @@ class SnekData(val size: Int) {
 
     fun getCharacter(x: Int, y: Int): TileType {
         body.forEachIndexed { index, segment ->
-            if (segment.point.x == x && segment.point.y == y)
+            if (segment.point.x == x && segment.point.y == y) {
                 return charTypeMap[index] ?: TileType.None
+            }
         }
 
         return TileType.None
+    }
+
+    fun getSegment(tileType: TileType): Segment? {
+        val characterIndex = charIndexMap[tileType] ?: -1
+        return body.getOrNull(characterIndex)
+    }
+
+    fun getCharacterResNames(stepState: StepState): Map<TileType, String> {
+        val characterResNames = mutableMapOf<TileType, String>()
+
+        println("==> body.size: ${body.size}")
+        for (i in body.indices) {
+            val segment = body[i]
+            val tileType = charTypeMap[i] ?: TileType.None
+            if (tileType != TileType.None) {
+                val direction = segment.getDirection()
+                val resName =
+                    "${tileType.resName}_${direction.name.lowercase()}_${stepState.name.lowercase()}"
+
+                characterResNames[tileType] = resName
+
+                println("==> $resName")
+            }
+        }
+
+        return characterResNames
     }
 }
 
@@ -246,7 +279,8 @@ class GameObject(val size: Int) {
                 val topItem = tileSettings.getTopItem(x, y)
 
                 vector.add(grassType) // Add grass tile first
-                vector.add(topItem)
+                if (topItem != TileType.None)
+                    vector.add(topItem)
 
                 matrix[x][y] = vector
             }
@@ -254,4 +288,7 @@ class GameObject(val size: Int) {
 
         return matrix
     }
+
+    fun getCharacterResNames(stepState: StepState): Map<TileType, String> =
+        snekData.getCharacterResNames(stepState = stepState)
 }

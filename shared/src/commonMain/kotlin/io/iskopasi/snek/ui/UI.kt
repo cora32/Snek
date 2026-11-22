@@ -140,7 +140,7 @@ fun rememberCharacterImageBitmapMap(imageNameMap: Map<Int, String>): Map<Int, Im
 }
 
 @Composable
-fun rememberGeneralBitmapMap(modifier: Modifier = Modifier): Map<ResName, ImageBitmap> {
+fun rememberGeneralBitmapMap(): Map<ResName, ImageBitmap> {
     val g1 = imageResource(Res.drawable.grass_01)
     val g2 = imageResource(Res.drawable.grass_02)
     val g3 = imageResource(Res.drawable.grass_03)
@@ -172,7 +172,21 @@ fun rememberGeneralBitmapMap(modifier: Modifier = Modifier): Map<ResName, ImageB
 }
 
 @Composable
-fun loadResMap(modifier: Modifier = Modifier): Map<TileType, ImageBitmap> {
+fun loadDynamicRes(characterResNameMap: Map<TileType, String>): Map<TileType, ImageBitmap> {
+    val bitmapMapState = produceState(
+        initialValue = emptyMap(),
+        keys = arrayOf(characterResNameMap)
+    ) {
+        value = characterResNameMap.mapNotNull { (tile, name) ->
+            val bitmap = loadBitmapByName(name)
+            if (bitmap != null) tile to bitmap else null
+        }.toMap()
+    }
+    return bitmapMapState.value
+}
+
+@Composable
+fun loadResMap(): Map<TileType, ImageBitmap> {
     val g1 = imageResource(Res.drawable.grass_01)
     val g2 = imageResource(Res.drawable.grass_02)
     val g3 = imageResource(Res.drawable.grass_03)

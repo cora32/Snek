@@ -18,7 +18,8 @@ enum class GrassType {
     GrassWhiteFlower,
 }
 
-enum class TileType(val resName: String = "") {
+enum class TileType(val resName: String = "", val isCharacter: Boolean = false) {
+
     Tree1,
     Tree2,
     Tree3,
@@ -28,9 +29,9 @@ enum class TileType(val resName: String = "") {
     GrassWhiteFlower,
     GrassYellowFlower,
     Apu,
-    Cirno("cirno_sprite"),
-    Daiyousei("daiyousei"),
-    None
+    Cirno("cirno_sprite", true),
+    Daiyousei("daiyousei", true),
+    None;
 }
 
 class TileSettings(
