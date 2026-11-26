@@ -27,6 +27,8 @@ data class UIState(
     val tileSettings: TileSettings,
     val matrix: Array<Array<List<TileType>>>,
     val characterResNames: Map<TileType, String>,
+    val xOffset: Int,
+    val yOffset: Int,
 )
 
 
@@ -47,7 +49,9 @@ class SnekViewModel(val mapSize: Int = initialMapSize) : ViewModel() {
             ),
             tileSettings = gameObject.tileSettings,
             matrix = gameObject.toMatrix(),
-            characterResNames = mapOf()
+            characterResNames = mapOf(),
+            xOffset = gameObject.xOffset,
+            yOffset = gameObject.yOffset,
         )
     )
     private val stepAnimator = StepAnimator()
@@ -118,8 +122,39 @@ class SnekViewModel(val mapSize: Int = initialMapSize) : ViewModel() {
                 imageNameMap = imageNameMap,
                 tileSettings = gameObject.tileSettings,
                 matrix = matrix,
-                characterResNames = characterResNames
+                characterResNames = characterResNames,
+                xOffset = gameObject.xOffset,
+                yOffset = gameObject.yOffset,
             )
         }
+    }
+
+    fun getTileVector(
+        displayX: Int,
+        displayY: Int,
+        displayRows: Int,
+        displayColumns: Int,
+    ): List<TileType> {
+        val matrix = state.value.matrix
+        val xOffset = state.value.xOffset
+        val yOffset = state.value.yOffset
+
+        val matrixCenter = matrix.size / 2
+        val x = matrixCenter - displayColumns / 2 + displayX + xOffset
+        val y = matrixCenter - displayRows / 2 + displayY + yOffset
+
+        val fixedX = when {
+            x >= matrix.size -> x - matrix.size
+            x < 0 -> matrix.size + x
+            else -> x
+        }
+
+        val fixedY = when {
+            y >= matrix.size -> y - matrix.size
+            y < 0 -> matrix.size + y
+            else -> y
+        }
+
+        return matrix[fixedX][fixedY]
     }
 }

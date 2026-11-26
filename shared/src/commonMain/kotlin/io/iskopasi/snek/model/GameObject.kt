@@ -225,6 +225,8 @@ class GameObject(val size: Int) {
     val snekData: SnekData by lazy { getSnekData(size = size) }
     val tileSettings = TileSettings(mapSize = size, snekData = snekData)
     var score: Int = 0
+    var xOffset: Int = 0
+    var yOffset: Int = 0
 
     private fun getSnekData(size: Int): SnekData {
         val snekData = SnekData(size = size)
@@ -232,8 +234,38 @@ class GameObject(val size: Int) {
         return snekData
     }
 
+    private fun addXOffset() {
+        if (xOffset >= size)
+            xOffset = -size / 2
+        else
+            xOffset++
+    }
+
+    private fun subXOffset() {
+        if (xOffset < -size / 2)
+            xOffset = size
+        else
+            xOffset--
+    }
+
+    private fun addYOffset() {
+        if (yOffset >= size)
+            yOffset = -size / 2
+        else
+            yOffset++
+    }
+
+    private fun subYOffset() {
+        if (yOffset < -size / 2)
+            yOffset = size
+        else
+            yOffset--
+    }
+
     fun moveRight() {
         val isScore = snekData.moveRight(foodSet = tileSettings.apuPoints)
+
+        addXOffset()
 
         if (isScore) {
             score++
@@ -243,6 +275,8 @@ class GameObject(val size: Int) {
     fun moveLeft() {
         val isScore = snekData.moveLeft(foodSet = tileSettings.apuPoints)
 
+        subXOffset()
+
         if (isScore) {
             score++
         }
@@ -251,6 +285,8 @@ class GameObject(val size: Int) {
     fun moveUp() {
         val isScore = snekData.moveUp(foodSet = tileSettings.apuPoints)
 
+        subYOffset()
+
         if (isScore) {
             score++
         }
@@ -258,6 +294,8 @@ class GameObject(val size: Int) {
 
     fun moveDown() {
         val isScore = snekData.moveDown(foodSet = tileSettings.apuPoints)
+
+        addYOffset()
 
         if (isScore) {
             score++
